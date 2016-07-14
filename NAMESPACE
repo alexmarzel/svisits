@@ -1,0 +1,5 @@
+useDynLib(svisits)
+exportPattern("^[[:alpha:]]+")
+importFrom(Rcpp, evalCpp)
+import(data.table,compiler, parallel, chron)
+
