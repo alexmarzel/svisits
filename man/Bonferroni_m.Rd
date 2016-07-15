@@ -8,13 +8,15 @@ Detecting the pairs using Bonferroni correction
 much faster than the shuffling
 }
 \usage{
-Bonferroni_m(unadjusted_pairs, prob = 1/75, alpha = 0.01, only_significant = TRUE)
+Bonferroni_m(unadjusted_pairs, ids=ids,prob = 1/75, alpha = 0.01, only_significant = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{unadjusted_pairs}{
 pairs as found by the function get_observed_pairs
 }
+ \item{ids}{
+patient ids}
   \item{prob}{
 probability of sharing a single visit, default 1/75
 }
@@ -64,6 +66,6 @@ ids<- data.table(ids=as.character(names(table(db_dates$subject))),
 setkey(ids, "ids")
 
 # run
-Bonferroni_m_output<-Bonferroni_m(unadjusted_observed_pairs,prob = 1/75,alpha =0.01)
+Bonferroni_m_output<-Bonferroni_m(unadjusted_observed_pairs,ids=ids,prob = 1/75,alpha =0.01)
 length(Bonferroni_m_output[,1])
 }

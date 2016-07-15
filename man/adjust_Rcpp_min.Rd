@@ -53,6 +53,6 @@ ids<- data.table(ids=as.character(names(table(db_dates$subject))),
 setkey(ids, "ids") 
 
 # now adjust the pairs
-adjusted_observed<-adjust_visits(unadjusted_pairs=unadjusted_observed_pairs,prob = 1/75)
+adjusted_observed<-adjust_visits(unadjusted_pairs=unadjusted_observed_pairs,ids=ids,prob = 1/75)
 head(adjusted_observed)
 }

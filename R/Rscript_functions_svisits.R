@@ -40,7 +40,8 @@ get_observed_pairs<-function(tested_db){
 };get_observed_pairs<-cmpfun(get_observed_pairs)
 
 # make the Adjustemnt for the overall number of visits per pair
-adjust_visits<-function(unadjusted_pairs, prob=1/75){
+
+adjust_visits<-function(unadjusted_pairs,ids=ids, prob=1/75){
   real_db = data.table::data.table(allPairs= unlist(names(unadjusted_pairs)), Freq=unlist(as.numeric(unadjusted_pairs)))
   real_db_1<-real_db[real_db$Freq >=1, ]
   real_db_1<-cbind(real_db_1,do.call("rbind",strsplit(as.character(real_db_1$allPairs),"_")))
@@ -48,13 +49,13 @@ adjust_visits<-function(unadjusted_pairs, prob=1/75){
   real_db_1<-na.omit(real_db_1[ids,allow.cartesian=TRUE]); setkey(real_db_1, "id_2");
   real_db_1<-na.omit(real_db_1[ids,allow.cartesian=TRUE]); setnames(real_db_1,5:6,c("N_visits.x","N_visits.y"))
   real_db_1$Freq<-as.numeric(real_db_1$Freq); real_db_1$N_visits.x<-as.numeric(real_db_1$N_visits.x);real_db_1$N_visits.y<-as.numeric(real_db_1$N_visits.y)  
-  real_db_1<-cbind(real_db_1, Corrected=svisits::adjust_Rcpp_min(mat = as.matrix( real_db_1[, .(Freq, N_visits.x,N_visits.y)] ), prob=prob ))
+  real_db_1<-cbind(real_db_1, Corrected=svisits::adjust_Rcpp_min(mat = as.matrix( real_db_1[,c(2,5,6),with = FALSE] ), prob=prob ))
   real_db_1<-as.data.frame(real_db_1)
   return(real_db_1)}
 adjust_visits<-compiler::cmpfun(adjust_visits)
 
 # Shuffling simulatoins
-Shuffling_simulation<-function(db_dates,adjusted_observed){
+Shuffling_simulation<-function(db_dates,ids=ids,adjusted_observed){
   tested_db_random<-db_dates
   #Unique dates and periods
   datesUnique=unique(db_dates$dates); fupdatePeriodUnique<-unique(db_dates$fupdatePeriod)
@@ -65,14 +66,14 @@ Shuffling_simulation<-function(db_dates,adjusted_observed){
   # Get the random collisions
   RandomPairs<-unlist(mclapply(datesUnique,function(x) getPairs( tested_db_random$subject[which(tested_db_random$dates==x)] ),mc.cores = detectCores())) 
   # Adjust the randomized
-  Adjusted_randomized<-adjust_visits(unadjusted_pairs =table(RandomPairs))
+  Adjusted_randomized<-adjust_visits(unadjusted_pairs =table(RandomPairs),ids=ids)
   # return vector of false-positive thresholds
   return(sapply(1:10,
                 function(x) sum(Adjusted_randomized$Corrected>x)/sum(adjusted_observed$Corrected>x) )) 
 }; Shuffling_simulation <-cmpfun(Shuffling_simulation)
 
 # Bonfrerroni method
-Bonferroni_m<-function(unadjusted_pairs,prob=1/75,alpha=0.01,only_significant=TRUE){
+Bonferroni_m<-function(unadjusted_pairs,ids=ids,prob=1/75,alpha=0.01,only_significant=TRUE){
   real_db = data.table(allPairs= unlist(names(unadjusted_pairs)), Freq=unlist(as.numeric(unadjusted_pairs)))
   real_db_1<-real_db[real_db$Freq >=1, ]
   real_db_1<-cbind(real_db_1,do.call("rbind",strsplit(as.character(real_db_1$allPairs),"_")))
@@ -80,7 +81,7 @@ Bonferroni_m<-function(unadjusted_pairs,prob=1/75,alpha=0.01,only_significant=TR
   real_db_1<-na.omit(real_db_1[ids,allow.cartesian=TRUE]); setkey(real_db_1, "id_2");
   real_db_1<-na.omit(real_db_1[ids,allow.cartesian=TRUE]); setnames(real_db_1,5:6,c("N_visits.x","N_visits.y"))
   real_db_1$Freq<-as.numeric(real_db_1$Freq); real_db_1$N_visits.x<-as.numeric(real_db_1$N_visits.x);real_db_1$N_visits.y<-as.numeric(real_db_1$N_visits.y)  
-  real_db_1<-cbind(real_db_1, Prob_for_Bonferr=svisits::adjust_R_Rcpp_short_binomial(mat = as.matrix( real_db_1[, .(Freq, N_visits.x,N_visits.y)]), prob=prob ))
+  real_db_1<-cbind(real_db_1, Prob_for_Bonferr=svisits::adjust_R_Rcpp_short_binomial(mat = as.matrix( real_db_1[,c(2,5,6),with = FALSE] ), prob=prob ))
   real_db_1<-as.data.frame(real_db_1)
   
   real_db_1<-cbind(real_db_1,BP=1:length(real_db_1[,1]))

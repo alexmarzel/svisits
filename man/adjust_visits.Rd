@@ -7,12 +7,14 @@ Adjust the number of shared visits }
 Adjusts the total number of shared visits per pair
 }
 \usage{
-adjust_visits(unadjusted_pairs, prob = 1/75)
+adjust_visits(unadjusted_pairs,ids=ids, prob = 1/75)
 }
 \arguments{
   \item{unadjusted_pairs}{
 The pairs
 }
+ \item{ids}{
+patient ids}
   \item{prob}{
 probability of sharing a single visit, depends on the frequency of visits. Default 1/75
 ~visit every three months.
@@ -52,6 +54,6 @@ ids<- data.table(ids=as.character(names(table(db_dates$subject))),
 setkey(ids, "ids") 
 
 # now adjust the pairs
-adjusted_observed<-adjust_visits(unadjusted_pairs=unadjusted_observed_pairs,prob = 1/75)
+adjusted_observed<-adjust_visits(unadjusted_pairs=unadjusted_observed_pairs,ids=ids, prob = 1/75)
 head(adjusted_observed)
 }

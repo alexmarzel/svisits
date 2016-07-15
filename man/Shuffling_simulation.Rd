@@ -7,12 +7,15 @@ Shuffling simulation to determine shared visits false-positive threshold}
 Shuffling simulation to determine shared visits false-positive threshold, one run, use "replicate" for several, see example
 }
 \usage{
-Shuffling_simulation(db_dates, adjusted_observed)
+Shuffling_simulation(db_dates,ids=ids, adjusted_observed)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{db_dates}{
 visits to be shuffled (long format) an output from prepare_db, see data("simulated_data)
+}
+ \item{ids}{
+patients ids
 }
   \item{adjusted_observed}{
 The dataset with adjusted observed number of visits
@@ -62,11 +65,11 @@ ids<- data.table(ids=as.character(names(table(db_dates$subject))),
 setkey(ids, "ids") 
 
 # now adjust the pairs
-adjusted_observed<-adjust_visits(unadjusted_pairs=unadjusted_observed_pairs,prob = 1/75)
+adjusted_observed<-adjust_visits(unadjusted_pairs=unadjusted_observed_pairs,ids=ids,prob = 1/75)
 # number of simulations
 n_shuffl<-2 # two 
 Shuffling_simulation_output<- replicate(n_shuffl,
-                                        Shuffling_simulation(db_dates,adjusted_observed),
+                                        Shuffling_simulation(db_dates,ids=ids,adjusted_observed),
                                         simplify=FALSE)
 
 head(Shuffling_simulation_output)

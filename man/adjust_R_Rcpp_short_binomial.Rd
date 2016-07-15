@@ -53,6 +53,6 @@ ids<- data.table(ids=as.character(names(table(db_dates$subject))),
 setkey(ids, "ids")
 
 # run
-Bonferroni_m_output<-Bonferroni_m(unadjusted_observed_pairs,prob = 1/75,alpha =0.01)
+Bonferroni_m_output<-Bonferroni_m(unadjusted_observed_pairs,ids=ids,prob = 1/75,alpha =0.01)
 length(Bonferroni_m_output[,1])
 }
