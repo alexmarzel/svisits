@@ -1,0 +1,18 @@
+Package: svisits
+Type: Package
+Title: Shared Clinic Visit Dates Identify Steady HIV Positive
+        Partnerships for Research
+Version: 1.1
+Date: 2016-07-12
+Author: Alex Marzel, Teja Turk, Roger Kouyos
+Maintainer: Alex Marzel <Alex.Marzel@usz.ch>
+Description: This package helps to find some stable HIV-infected partnerships in cohort studies based on the assumption that some patients frequently attend the clinical visits together. These pairs are useful for biological and epidemiological research.
+License: GPL (>= 2)
+Depends: R (>= 2.10), Rcpp (>= 0.12.5), compiler, parallel, chron,
+        data.table
+Imports: Rcpp (>= 0.12.5), compiler, parallel, chron, data.table
+LinkingTo: Rcpp
+Suggests: knitr, rmarkdown
+VignetteBuilder: knitr
+NeedsCompilation: yes
+Packaged: 2016-07-15 13:49:02 UTC; alexmarzel

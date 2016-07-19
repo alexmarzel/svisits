@@ -1,0 +1,191 @@
+---
+title: "svisits: finding HIV transmission and serosorting pairs using shared clinic visit dates"
+output: rmarkdown::pdf_document
+author: "Alex Marzel, Teja Turk"
+vignette: >
+  %\VignetteIndexEntry{svisits: finding HIV transmission and serosorting pairs using shared clinic visit dates}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+This package helps to find some stable HIV-infected partnerships in cohort studies based on the assumption that some patients frequently attend the clinical visits together. These pairs are useful for biological and epidemiological research.
+
+Package installation:
+```{r, warning=FALSE,echo=TRUE,message=FALSE, cache=FALSE}
+install.packages("https://github.com/alexmarzel/svisits/raw/master/svisits_1.1.tar.gz",
+                  repos = NULL, type = "source")
+library(svisits)
+set.seed(14051948)
+
+```
+
+The following paragraphs explain step-by-step how the __svisits__ package can be used to find stable HIV-infected partnerships. All the steps can be also performed with one function call, which is demonstrated [below](#summary).
+
+First let us load the database with visit dates in a long format (each row represents a visit of a particular person) and transform it to the appropriate format. The following simulated dataset contains 20 transmission pseudo pairs. The data were simulated based
+on the visits distribution in the SHCS.
+```{r}
+data("simulated_data")
+# prepare the database
+db_dates <- prepare_db(your_database = simulated_data,
+                       ids_column = "subject",
+                       dates_column = "sim_dates")
+head(db_dates)
+```
+
+Deconstruct the dates into 3 months periods:
+```{r}
+# extract month, day and year of each clinic visit:
+db_dates <- cbind(db_dates, month.day.year(db_dates$dates))
+# deconstruct the dates into 3 months periods
+periodMonths <- 3
+db_dates <- cbind(db_dates,
+                  fupdatePeriod=db_dates$year+round(floor((db_dates$month-1)/periodMonths)
+                                                      *periodMonths/12,
+                                                      digits=2))
+```
+
+Get unadjusted, observed shared visits. It can take some time.
+```{r}
+unadjusted_observed_pairs <- get_observed_pairs(db_dates)
+head(unadjusted_observed_pairs)
+```
+
+
+Descriptive statistics of shared visits for pairs that shared at least a single visit:
+```{r}
+summary(as.numeric(unadjusted_observed_pairs))
+```
+
+Prepare the ids:
+```{r}
+ids_table <- table(db_dates$subject)
+ids <- data.table(ids = as.character(names(ids_table)),
+                  N_visits = as.character(as.numeric(ids_table))) 
+setkey(ids, "ids") 
+```
+
+Chances that two unrelated cohort members share a visit are increasing with the overall number of visits of each member of the pair. To account for this we have to adjust the number of shared visits $S$ within each pair. This will return the adjusted number of shared visits $S'$ for the observed, unshuffled data
+$$S' = S - \frac{\log\left[{\min\left(T_{a}, T_{b}\right) \choose S}\right]}{\log\left[75\right]},$$
+where $T_{a}$ and $T_{b}$ denote the number of visits of each member of the pair. The adjusted number of visits is under the column "Corrected":
+```{r}
+adjusted_observed <- adjust_visits(unadjusted_pairs = unadjusted_observed_pairs,
+                                   ids = ids,
+                                   prob = 1/75)
+head(adjusted_observed)
+```
+
+## Threshold for the number of shared visits
+
+### Shuffling
+
+Due to the multiple comparisons problem and strongly simplifying assumptions about the uniform distribution of visits, the corrected number of shared visits is not an optimal test statistic. Instead, the visits are first shuffled within each quarter (such that the original distribution of the number of visits per individual is preserved) and the number of randomly collided shared visits per pair is counted and penalized using "adjust_visits". In other words, the observed visit dates from a given quarter are randomly re-assigned between the patients that attended the clinic during this quarter. 
+
+Define the number of desired shuffling simulations (ideally > 100, but it will take some time) and run. It will take some time to finish. 
+```{r}
+n_shuffl <- 10
+Shuffling_simulation_output <- replicate(n_shuffl,
+                                         Shuffling_simulation(db_dates,
+                                                              ids = ids,
+                                                              adjusted_observed),
+                                         simplify=F)
+
+# inspect the false-positive thresholds 
+head(Shuffling_simulation_output)
+```
+
+Extract the False-Positive thresholds:
+```{r}
+# Thresholds
+for_thresholds <- do.call("rbind", Shuffling_simulation_output)
+
+# Take max FP value for each position from all the simulations.
+# One can also take mean or median insted of maximum
+for_thresholds_max <- apply(X = for_thresholds,
+                            MARGIN = 2,
+                            max,na.rm = TRUE)
+
+# find lowest threshold below alpha=0.01
+Thresholds_lowest <- match(for_thresholds_max[for_thresholds_max<0.01][1],
+                           for_thresholds_max) 
+
+```
+
+Plot the simulations and the False-Positive threshold (indicated by an arrow):
+```{r}
+max_threshold <- length(Shuffling_simulation_output[[1]])
+plot(x=1:max_threshold,
+     y=unlist(Shuffling_simulation_output[[1]]),
+     xlab="Shared visits threshold", ylab="False Positive Fraction",
+     type="l", col="darkblue", yaxp=c(0.0,1,10), lwd=0.8, main="",
+     xaxp=c(1,12,11), cex.lab=1.3, cex.axis=1.4, cex.main=1.3, ylim=c(0,1))
+arrows(x0 = Thresholds_lowest, x1=Thresholds_lowest,
+       y0=0.22, y1=0.07, cex=3, lwd=5)
+invisible(lapply(X=1:n_shuffl, 
+                 function(X) {
+                   lines(x=1:max_threshold, y=unlist(Shuffling_simulation_output[[X]]),
+                         col="darkblue", lwd=0.8 )
+                   }))
+lines(c(-100,100), 0.01*c(1,1), lty=3, col="red", lwd=3)
+
+Thresholds_lowest
+# This is the cutoff for the number of adjusted visits
+```
+
+Extract the pairs above the threshold:
+```{r}
+select_shuffled <- adjusted_observed[which(adjusted_observed$Corrected>Thresholds_lowest),]
+
+# We found the 20 pairs
+length(select_shuffled[,1])
+```
+
+### Alternative (and much faster approach): Bonferroni correction
+
+Predict the probabilities and than adjust for multiple testing using Bonferroni:
+```{r}
+# alpha 0.01, one false-positive pair
+Bonferroni_m_output <- Bonferroni_m(unadjusted_observed_pairs,
+                                    ids = ids,
+                                    prob = 1/75,
+                                    alpha =0.01)
+length(Bonferroni_m_output[,1])
+
+# alpha 0.001, only 20 true pairs
+Bonferroni_m_output <- Bonferroni_m(unadjusted_observed_pairs,
+                                    ids = ids,
+                                    prob = 1/75,
+                                    alpha =0.001)
+length(Bonferroni_m_output[,1])
+```
+
+## Summary: one-step-approach {#summary}
+
+The above pairs can be alternatively found with one function call:
+```{r}
+
+data("simulated_data")
+set.seed(14051948)
+
+# with shuffling and Bonferroni for alpha=0.01
+pairs <- find_pairs(simulated_data, 
+                    ids_column = "subject",
+                    dates_column = "sim_dates",
+                    shuffling = TRUE,
+                    n_shuffl = 10)
+head(pairs$Shuffled_pairs)
+identical(select_shuffled, pairs$Shuffled_pairs)
+# with only Bonferroni for alpha=0.001
+pairs_Bonferroni <- find_pairs(simulated_data, 
+                    ids_column = "subject",
+                    dates_column = "sim_dates",
+                    alpha = 0.001,
+                    shuffling = FALSE)
+head(pairs$Bonferroni_pairs)
+identical(Bonferroni_m_output, pairs_Bonferroni$Bonferroni_pairs)
+```
+
+
+
+
+
+
