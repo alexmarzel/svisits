@@ -3,7 +3,7 @@
 \title{
 Pairs with at least one shared visit}
 \description{
-FInd all the pairs that shared at least a single visit.
+Find all the pairs that shared at least a single visit.
 }
 \usage{
 get_observed_pairs(tested_db)

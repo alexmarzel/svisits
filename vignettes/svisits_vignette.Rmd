@@ -162,7 +162,7 @@ length(Bonferroni_m_output[,1])
 
 The above pairs can be alternatively found with one function call:
 ```{r}
-
+library(svisits)
 data("simulated_data")
 set.seed(14051948)
 
@@ -173,6 +173,7 @@ pairs <- find_pairs(simulated_data,
                     shuffling = TRUE,
                     n_shuffl = 10)
 head(pairs$Shuffled_pairs)
+# show similarity
 identical(select_shuffled, pairs$Shuffled_pairs)
 # with only Bonferroni for alpha=0.001
 pairs_Bonferroni <- find_pairs(simulated_data, 
@@ -180,7 +181,8 @@ pairs_Bonferroni <- find_pairs(simulated_data,
                     dates_column = "sim_dates",
                     alpha = 0.001,
                     shuffling = FALSE)
-head(pairs$Bonferroni_pairs)
+head(pairs_Bonferroni$Bonferroni_pairs)
+# show similarity
 identical(Bonferroni_m_output, pairs_Bonferroni$Bonferroni_pairs)
 ```
 
