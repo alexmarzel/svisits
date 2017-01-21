@@ -9,16 +9,20 @@ Make sure the most updated version of R is installed.
 The packages "compiler" and "parallel" should be included by default. If not, update R. 
 
 ## Install dependencies
-
+```r
 install.packages(c("Rcpp", "chron","data.table")) 
-## Install the "svisits" package
 
+```
+## Install the "svisits" package
+```r
 install.packages("svisits_1.2.0.tar.gz",
                  repos = NULL, type = "source")  
-                 
+```              
 Note: put "svisits_1.2.0.tar.gz" into the working directory or provide the full path.
 
-## Fastest use
+## Fastest use, an example
+
+```r
 library(svisits) 
 
 data("simulated_data") 
@@ -28,3 +32,4 @@ pairs <- find_pairs(simulated_data,
                     dates_column = "sim_dates")
                     
 head(pairs$Bonferroni_pairs)
+```   
