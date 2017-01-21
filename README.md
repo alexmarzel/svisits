@@ -20,7 +20,7 @@ install.packages("svisits_1.2.0.tar.gz",
 ```              
 Note: Place "svisits_1.2.0.tar.gz" into the working directory or provide the full path.
 
-## Fastest use, an example
+# Fastest use, an example
 
 ```r
 library(svisits) 
