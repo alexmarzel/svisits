@@ -4,14 +4,20 @@ visits by chance the package helps to identify couples that may represent either
 in a stable relationship, for biological and epidemiologcial HIV research.
 
 # Installation
-Make sure you the most updated version of R is installed 
-The packages "compiler" and "parallel" should be included by default.
+Make sure the most updated version of R is installed.
+
+The packages "compiler" and "parallel" should be included by default. If not, update R. 
 
 ## Install dependencies
+
 install.packages(c("Rcpp", "chron","data.table")) 
 ## Install the "svisits" package
+
 install.packages("svisits_1.2.0.tar.gz",
                  repos = NULL, type = "source")  
+                 
+Note: put "svisits_1.2.0.tar.gz" into the working directory or provide the full path.
+
 ## Fastest use
 library(svisits) 
 
