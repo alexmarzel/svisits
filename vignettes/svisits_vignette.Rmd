@@ -12,8 +12,7 @@ This package helps to find some stable HIV-infected partnerships in cohort studi
 
 Package installation:
 ```{r, warning=FALSE,echo=TRUE,message=FALSE, cache=FALSE}
-install.packages("https://github.com/alexmarzel/svisits/raw/master/svisits_1.1.tar.gz",
-                  repos = NULL, type = "source")
+
 library(svisits)
 set.seed(14051948)
 

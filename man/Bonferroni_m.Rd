@@ -40,7 +40,7 @@ returns only significant pairs above the threshold (default) or all the pairs}
   \item{\code{"N_visits.y"}}{total number of visits of the second pair member}
   \item{\code{"Prob_for_Bonferr"}}{probability of sharing the given number of shared visits}
   \item{\code{"BP"}}{row number}
-  \item{\code{"ltp"}}{the log-transformed probablity of sharing the given number shared visits}
+  \item{\code{"ltp"}}{the minus log10-transformed probablity of sharing the given number shared visits}
 }
 }
 

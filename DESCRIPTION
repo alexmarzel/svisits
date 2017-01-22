@@ -2,7 +2,7 @@ Package: svisits
 Type: Package
 Title: Shared Clinic Visit Dates Identify Steady HIV Positive
         Partnerships for Research
-Version: 1.1
+Version: 1.2.0
 Date: 2016-07-12
 Author: Alex Marzel, Teja Turk, Roger Kouyos
 Maintainer: Alex Marzel <Alex.Marzel@usz.ch>
